@@ -1,0 +1,858 @@
+﻿/* =========================================
+   GLOBAL
+========================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Arial,
+        sans-serif;
+
+    background: #070b14;
+    color: #f8fafc;
+}
+
+button,
+input,
+select {
+    font-family: inherit;
+}
+
+button {
+    outline: none;
+}
+
+
+/* =========================================
+   APP
+========================================= */
+
+.app {
+    min-height: 100vh;
+
+    padding: 28px 42px;
+
+    background:
+        radial-gradient(
+            circle at 85% 0%,
+            rgba(37, 99, 235, 0.12),
+            transparent 28%
+        ),
+        radial-gradient(
+            circle at 10% 20%,
+            rgba(14, 165, 233, 0.05),
+            transparent 25%
+        ),
+        #070b14;
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 28px;
+}
+
+.brand h1 {
+    margin: 0;
+
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -1px;
+
+    color: #f8fafc;
+}
+
+.brand p {
+    margin: 7px 0 0;
+
+    color: #64748b;
+
+    font-size: 13px;
+}
+
+
+/* =========================================
+   BOT STATUS
+========================================= */
+
+.bot-status {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 9px 15px;
+
+    border-radius: 999px;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    letter-spacing: 0.6px;
+
+    border: 1px solid;
+}
+
+.bot-status.running {
+    color: #4ade80;
+
+    background:
+        rgba(34, 197, 94, 0.10);
+
+    border-color:
+        rgba(34, 197, 94, 0.25);
+
+    box-shadow:
+        0 0 20px rgba(34, 197, 94, 0.06);
+}
+
+.bot-status.stopped {
+    color: #f87171;
+
+    background:
+        rgba(239, 68, 68, 0.10);
+
+    border-color:
+        rgba(239, 68, 68, 0.25);
+}
+
+
+/* =========================================
+   KPI CARDS
+========================================= */
+
+.cards {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 16px;
+
+    margin-bottom: 18px;
+}
+
+.card {
+    position: relative;
+
+    min-height: 155px;
+
+    padding: 21px;
+
+    overflow: hidden;
+
+    border-radius: 17px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(15, 23, 42, 0.96),
+            rgba(11, 18, 32, 0.90)
+        );
+
+    border: 1px solid #1e293b;
+
+    box-shadow:
+        0 15px 40px rgba(0, 0, 0, 0.18);
+
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.card::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 2px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(56, 189, 248, 0.55),
+            transparent
+        );
+
+    opacity: 0;
+
+    transition: opacity 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+
+    border-color: #334155;
+
+    box-shadow:
+        0 20px 45px rgba(0, 0, 0, 0.24);
+}
+
+.card:hover::before {
+    opacity: 1;
+}
+
+.card-label {
+    color: #64748b;
+
+    font-size: 10px;
+
+    text-transform: uppercase;
+
+    letter-spacing: 1.1px;
+
+    font-weight: 800;
+}
+
+.card h2 {
+    margin: 9px 0 0;
+
+    font-size: 15px;
+
+    font-weight: 700;
+}
+
+.big-number {
+    margin-top: 12px;
+
+    font-size: 26px;
+
+    font-weight: 800;
+
+    letter-spacing: -0.7px;
+
+    color: #f8fafc;
+}
+
+.muted {
+    margin-top: 8px;
+
+    color: #64748b;
+
+    font-size: 12px;
+}
+
+
+/* =========================================
+   PROFIT / LOSS
+========================================= */
+
+.profit {
+    color: #4ade80 !important;
+}
+
+.loss {
+    color: #f87171 !important;
+}
+
+
+/* =========================================
+   SIGNAL
+========================================= */
+
+.signal {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-width: 70px;
+
+    margin-top: 12px;
+
+    padding: 7px 13px;
+
+    border-radius: 8px;
+
+    font-size: 11px;
+
+    font-weight: 900;
+
+    letter-spacing: 0.7px;
+}
+
+.signal.buy {
+    color: #4ade80;
+
+    background:
+        rgba(34, 197, 94, 0.11);
+
+    border:
+        1px solid rgba(34, 197, 94, 0.18);
+}
+
+.signal.sell {
+    color: #f87171;
+
+    background:
+        rgba(239, 68, 68, 0.11);
+
+    border:
+        1px solid rgba(239, 68, 68, 0.18);
+}
+
+.signal.hold {
+    color: #facc15;
+
+    background:
+        rgba(234, 179, 8, 0.10);
+
+    border:
+        1px solid rgba(234, 179, 8, 0.18);
+}
+
+
+/* =========================================
+   CHART CARD
+========================================= */
+
+.chart-card {
+    width: 100%;
+
+    margin-bottom: 18px;
+
+    padding: 22px;
+
+    border-radius: 18px;
+
+    background:
+        rgba(15, 23, 42, 0.82);
+
+    border:
+        1px solid #1e293b;
+
+    box-shadow:
+        0 15px 40px rgba(0, 0, 0, 0.17);
+}
+
+.section-title {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 18px;
+}
+
+.section-title h2 {
+    margin: 0;
+
+    font-size: 16px;
+
+    font-weight: 750;
+
+    letter-spacing: -0.2px;
+}
+
+.section-title span {
+    color: #64748b;
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+    letter-spacing: 1px;
+}
+
+
+/* =========================================
+   CHART
+========================================= */
+
+.chart {
+    width: 100%;
+    height: 350px;
+}
+
+.professional-chart {
+    width: 100%;
+    height: 100%;
+}
+
+
+/* =========================================
+   BOT CONTROL
+========================================= */
+
+.control-panel {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 25px;
+
+    margin-bottom: 18px;
+
+    padding: 22px;
+
+    border-radius: 18px;
+
+    background:
+        rgba(15, 23, 42, 0.82);
+
+    border:
+        1px solid #1e293b;
+
+    box-shadow:
+        0 15px 40px rgba(0, 0, 0, 0.17);
+}
+
+.control-info {
+    min-width: 0;
+}
+
+.control-info h2 {
+    margin: 0 0 13px;
+
+    font-size: 16px;
+}
+
+.control-info p {
+    margin: 7px 0;
+
+    color: #64748b;
+
+    font-size: 12px;
+}
+
+.control-info strong {
+    color: #cbd5e1;
+}
+
+
+/* =========================================
+   BUTTONS
+========================================= */
+
+.buttons {
+    display: flex;
+
+    gap: 10px;
+
+    flex-shrink: 0;
+}
+
+.start-btn,
+.stop-btn {
+    min-width: 120px;
+
+    padding: 11px 18px;
+
+    border: 0;
+
+    border-radius: 9px;
+
+    font-size: 11px;
+
+    font-weight: 900;
+
+    letter-spacing: 0.5px;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        opacity 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.start-btn {
+    color: #03130a;
+
+    background: #22c55e;
+
+    box-shadow:
+        0 8px 20px rgba(34, 197, 94, 0.12);
+}
+
+.start-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+
+    background: #4ade80;
+
+    box-shadow:
+        0 10px 25px rgba(34, 197, 94, 0.18);
+}
+
+.stop-btn {
+    color: #ffffff;
+
+    background: #ef4444;
+
+    box-shadow:
+        0 8px 20px rgba(239, 68, 68, 0.10);
+}
+
+.stop-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+
+    background: #f87171;
+
+    box-shadow:
+        0 10px 25px rgba(239, 68, 68, 0.16);
+}
+
+button:disabled {
+    opacity: 0.35;
+
+    cursor: not-allowed;
+
+    box-shadow: none;
+}
+
+
+/* =========================================
+   POSITION
+========================================= */
+
+.position-section {
+    margin-bottom: 18px;
+
+    padding: 22px;
+
+    border-radius: 18px;
+
+    background:
+        rgba(15, 23, 42, 0.82);
+
+    border:
+        1px solid #1e293b;
+
+    box-shadow:
+        0 15px 40px rgba(0, 0, 0, 0.17);
+}
+
+.position-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 13px;
+}
+
+.position-grid > div {
+    min-height: 80px;
+
+    padding: 16px;
+
+    border-radius: 12px;
+
+    background: #0b1220;
+
+    border:
+        1px solid #1e293b;
+
+    transition:
+        border-color 0.2s ease;
+}
+
+.position-grid > div:hover {
+    border-color: #334155;
+}
+
+.position-grid span {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: #64748b;
+
+    font-size: 10px;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.8px;
+
+    font-weight: 700;
+}
+
+.position-grid strong {
+    font-size: 15px;
+
+    color: #e2e8f0;
+}
+
+
+/* =========================================
+   TABLE
+========================================= */
+
+.table-container {
+    width: 100%;
+
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    min-width: 550px;
+}
+
+thead {
+    background: rgba(2, 6, 23, 0.28);
+}
+
+th {
+    padding: 13px;
+
+    text-align: left;
+
+    color: #64748b;
+
+    font-size: 9px;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.9px;
+
+    font-weight: 800;
+
+    border-bottom:
+        1px solid #1e293b;
+}
+
+td {
+    padding: 14px 13px;
+
+    color: #cbd5e1;
+
+    font-size: 12px;
+
+    border-bottom:
+        1px solid #111827;
+}
+
+tbody tr {
+    transition:
+        background 0.15s ease;
+}
+
+tbody tr:hover {
+    background:
+        rgba(30, 41, 59, 0.35);
+}
+
+.trade-buy {
+    color: #4ade80 !important;
+
+    font-weight: 900;
+}
+
+.trade-sell {
+    color: #f87171 !important;
+
+    font-weight: 900;
+}
+
+.empty {
+    padding: 30px;
+
+    text-align: center;
+
+    color: #475569;
+}
+
+
+/* =========================================
+   LOADING SCREEN
+========================================= */
+
+.loading {
+    min-height: 100vh;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+
+    padding: 20px;
+
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(37, 99, 235, 0.10),
+            transparent 35%
+        ),
+        #070b14;
+
+    color: #f8fafc;
+}
+
+.loading h2 {
+    margin: 0 0 8px;
+
+    font-size: 20px;
+}
+
+.loading p {
+    margin: 0;
+
+    color: #64748b;
+
+    font-size: 13px;
+}
+
+
+/* =========================================
+   FOOTER
+========================================= */
+
+footer {
+    padding: 16px 0 4px;
+
+    text-align: center;
+
+    color: #475569;
+
+    font-size: 10px;
+
+    letter-spacing: 0.3px;
+}
+
+
+/* =========================================
+   SCROLLBAR
+========================================= */
+
+::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+
+::-webkit-scrollbar-track {
+    background: #070b14;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #1e293b;
+
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #334155;
+}
+
+
+/* =========================================
+   RESPONSIVE — TABLET
+========================================= */
+
+@media (max-width: 1100px) {
+
+    .app {
+        padding: 24px;
+    }
+
+    .cards {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    .position-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+}
+
+
+/* =========================================
+   RESPONSIVE — MOBILE
+========================================= */
+
+@media (max-width: 700px) {
+
+    .app {
+        padding: 17px;
+    }
+
+    .header {
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 15px;
+    }
+
+    .brand h1 {
+        font-size: 25px;
+    }
+
+    .cards {
+        grid-template-columns: 1fr;
+    }
+
+    .card {
+        min-height: 140px;
+    }
+
+    .chart-card,
+    .control-panel,
+    .position-section {
+        padding: 17px;
+    }
+
+    .chart {
+        height: 280px;
+    }
+
+    .control-panel {
+        flex-direction: column;
+
+        align-items: flex-start;
+    }
+
+    .buttons {
+        width: 100%;
+    }
+
+    .start-btn,
+    .stop-btn {
+        flex: 1;
+
+        min-width: 0;
+    }
+
+    .position-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .section-title {
+        gap: 10px;
+    }
+
+    .section-title h2 {
+        font-size: 14px;
+    }
+}
