@@ -3,7 +3,7 @@ import axios from "axios";
 import PriceChart from "./components/PriceChart";
 import "./App.css";
 
-const API = "http://localhost:5000/api";
+const API = "https://bot-p4wu.onrender.com/api";
 
 function App() {
     const [market, setMarket] = useState(null);
