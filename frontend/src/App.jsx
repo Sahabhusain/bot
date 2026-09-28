@@ -8,103 +8,105 @@ const API = "https://bot-p4wu.onrender.com/api";
 function App() {
     const [market, setMarket] = useState(null);
     const [bot, setBot] = useState(null);
+    const [signalData, setSignalData] = useState(null);
     const [portfolio, setPortfolio] = useState(null);
     const [trades, setTrades] = useState([]);
     const [chartData, setChartData] = useState([]);
 
+    const [quantity, setQuantity] = useState(1);
     const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState(false);
     const [error, setError] = useState("");
 
-    const [actionLoading, setActionLoading] = useState(false);
+    // ==========================================
+    // FORMATTERS
+    // ==========================================
+
+    const money = (value) =>
+        `₹${Number(value || 0).toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        })}`;
+
+    const number = (value) =>
+        Number(value || 0).toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
 
     // ==========================================
-    // FETCH ALL DATA
+    // FETCH MARKET + BOT + SIGNAL + PORTFOLIO
     // ==========================================
 
     const fetchData = async () => {
         try {
             setError("");
 
-            const marketResponse = await axios.get(
-                `${API}/market`
-            );
+            const [
+                marketResponse,
+                botResponse,
+                signalResponse
+            ] = await Promise.all([
+                axios.get(`${API}/market`),
+                axios.get(`${API}/bot/status`),
+                axios.get(`${API}/trading/signal`)
+            ]);
 
-            const botResponse = await axios.get(
-                `${API}/bot/status`
-            );
-
-            const marketData =
-                marketResponse.data.data;
+            const marketData = marketResponse.data.data;
+            const botData = botResponse.data.data;
+            const signal = signalResponse.data.data;
 
             setMarket(marketData);
-            setBot(botResponse.data.data);
+            setBot(botData);
+            setSignalData(signal);
 
             // Portfolio
-            const portfolioResponse =
-                await axios.get(
-                    `${API}/portfolio?price=${marketData.price}`
-                );
-
-            setPortfolio(
-                portfolioResponse.data.data
+            const portfolioResponse = await axios.get(
+                `${API}/portfolio?price=${marketData.price}`
             );
+
+            setPortfolio(portfolioResponse.data.data);
 
             // Trades
-            const tradesResponse =
-                await axios.get(
-                    `${API}/portfolio/trades`
-                );
-
-            setTrades(
-                tradesResponse.data.data || []
+            const tradesResponse = await axios.get(
+                `${API}/portfolio/trades`
             );
+
+            setTrades(tradesResponse.data.data || []);
 
             // Chart
             setChartData((previous) => {
                 const newPoint = {
                     time: new Date().toLocaleTimeString(),
-                    price: marketData.price,
+                    price: marketData.price
                 };
 
-                const updated = [
-                    ...previous,
-                    newPoint,
-                ];
-
-                return updated.slice(-30);
+                return [...previous, newPoint].slice(-30);
             });
 
             setLoading(false);
+
         } catch (err) {
-            console.error(
-                "Trading Bot API Error:",
-                err
-            );
+            console.error("Trading Bot API Error:", err);
 
             const message =
                 err?.response?.data?.message ||
                 err?.message ||
-                "Unknown connection error";
+                "Unable to connect to Trading Bot";
 
-            setError(
-                `API Error: ${message}`
-            );
-
+            setError(`API Error: ${message}`);
             setLoading(false);
         }
     };
 
     // ==========================================
-    // INITIAL LOAD + LIVE UPDATE
+    // INITIAL LOAD + AUTO REFRESH
     // ==========================================
 
     useEffect(() => {
         fetchData();
 
-        const interval = setInterval(
-            fetchData,
-            5000
-        );
+        const interval = setInterval(fetchData, 5000);
 
         return () => clearInterval(interval);
     }, []);
@@ -118,20 +120,16 @@ function App() {
             setActionLoading(true);
             setError("");
 
-            await axios.post(
-                `${API}/bot/start`
-            );
+            await axios.post(`${API}/bot/start`);
 
             await fetchData();
+
         } catch (err) {
             console.error(err);
 
             setError(
-                `Start Bot Error: ${
-                    err?.response?.data?.message ||
-                    err?.message ||
-                    "Unable to start bot"
-                }`
+                err?.response?.data?.message ||
+                "Unable to start bot"
             );
         } finally {
             setActionLoading(false);
@@ -147,20 +145,84 @@ function App() {
             setActionLoading(true);
             setError("");
 
-            await axios.post(
-                `${API}/bot/stop`
-            );
+            await axios.post(`${API}/bot/stop`);
 
             await fetchData();
+
         } catch (err) {
             console.error(err);
 
             setError(
-                `Stop Bot Error: ${
-                    err?.response?.data?.message ||
-                    err?.message ||
-                    "Unable to stop bot"
-                }`
+                err?.response?.data?.message ||
+                "Unable to stop bot"
+            );
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    // ==========================================
+    // MANUAL BUY
+    // ==========================================
+
+    const buyNifty = async () => {
+        if (!market?.price) {
+            setError("Market price is not available");
+            return;
+        }
+
+        try {
+            setActionLoading(true);
+            setError("");
+
+            await axios.post(`${API}/portfolio/buy`, {
+                symbol: "NIFTY",
+                price: market.price,
+                quantity: Number(quantity)
+            });
+
+            await fetchData();
+
+        } catch (err) {
+            console.error("BUY error:", err);
+
+            setError(
+                err?.response?.data?.message ||
+                "BUY order failed"
+            );
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    // ==========================================
+    // MANUAL SELL
+    // ==========================================
+
+    const sellNifty = async () => {
+        if (!market?.price) {
+            setError("Market price is not available");
+            return;
+        }
+
+        try {
+            setActionLoading(true);
+            setError("");
+
+            await axios.post(`${API}/portfolio/sell`, {
+                symbol: "NIFTY",
+                price: market.price,
+                quantity: Number(quantity)
+            });
+
+            await fetchData();
+
+        } catch (err) {
+            console.error("SELL error:", err);
+
+            setError(
+                err?.response?.data?.message ||
+                "SELL order failed"
             );
         } finally {
             setActionLoading(false);
@@ -174,7 +236,6 @@ function App() {
     const retryConnection = () => {
         setLoading(true);
         setError("");
-
         fetchData();
     };
 
@@ -186,13 +247,8 @@ function App() {
         return (
             <div className="loading">
                 <div>
-                    <h2>
-                        Connecting to Trading Bot...
-                    </h2>
-
-                    <p>
-                        Connecting to localhost:5000
-                    </p>
+                    <h2>Connecting to Trading Bot...</h2>
+                    <p>Connecting to production API...</p>
                 </div>
             </div>
         );
@@ -206,14 +262,12 @@ function App() {
         return (
             <div className="loading">
                 <div>
-                    <h2>
-                        Unable to connect to Trading Bot
-                    </h2>
+                    <h2>Unable to connect to Trading Bot</h2>
 
                     <p
                         style={{
                             color: "#f87171",
-                            marginTop: "10px",
+                            marginTop: "10px"
                         }}
                     >
                         {error}
@@ -222,9 +276,7 @@ function App() {
                     <button
                         onClick={retryConnection}
                         className="start-btn"
-                        style={{
-                            marginTop: "20px",
-                        }}
+                        style={{ marginTop: "20px" }}
                     >
                         Retry Connection
                     </button>
@@ -237,28 +289,16 @@ function App() {
     // SAFE VALUES
     // ==========================================
 
-    const price =
-        market?.price || 0;
+    const price = market?.price || 0;
+    const change = market?.change || 0;
+    const changePercent = market?.changePercent || 0;
 
-    const change =
-        market?.change || 0;
+    const totalValue = portfolio?.totalValue || 0;
+    const cash = portfolio?.cash || 0;
+    const totalPnL = portfolio?.totalPnL || 0;
+    const realizedPnL = portfolio?.realizedPnL || 0;
 
-    const changePercent =
-        market?.changePercent || 0;
-
-    const totalValue =
-        portfolio?.totalValue || 0;
-
-    const cash =
-        portfolio?.cash || 0;
-
-    const totalPnL =
-        portfolio?.totalPnL || 0;
-
-    const realizedPnL =
-        portfolio?.realizedPnL || 0;
-
-    const quantity =
+    const quantityHeld =
         portfolio?.position?.quantity || 0;
 
     const averagePrice =
@@ -267,30 +307,28 @@ function App() {
     const unrealizedPnL =
         portfolio?.unrealizedPnL || 0;
 
+    // Signal comes directly from /api/trading/signal
     const signal =
-        bot?.lastSignal || "HOLD";
+        signalData?.signal ||
+        bot?.lastSignal ||
+        "HOLD";
+
+    const ema20 = signalData?.ema20;
+    const ema50 = signalData?.ema50;
+    const rsi = signalData?.rsi;
+
+    const confidence = signalData?.confidence;
+
+    const reason =
+        signalData?.reason ||
+        "Waiting for strategy analysis...";
 
     // ==========================================
-    // FORMATTERS
+    // SIGNAL CLASS
     // ==========================================
 
-    const money = (value) =>
-        `₹${Number(value).toLocaleString(
-            "en-IN",
-            {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-            }
-        )}`;
-
-    const number = (value) =>
-        Number(value).toLocaleString(
-            "en-IN",
-            {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-            }
-        );
+    const signalClass =
+        signal.toLowerCase();
 
     // ==========================================
     // UI
@@ -304,13 +342,10 @@ function App() {
             <header className="header">
 
                 <div className="brand">
-                    <h1>
-                        Trading Bot
-                    </h1>
+                    <h1>Trading Bot</h1>
 
                     <p>
-                        Algorithmic Paper Trading
-                        Dashboard
+                        Algorithmic Paper Trading Dashboard
                     </p>
                 </div>
 
@@ -341,8 +376,7 @@ function App() {
                         color: "#f87171",
                         padding: "12px 16px",
                         borderRadius: "10px",
-                        marginBottom: "20px",
-                        fontSize: "13px",
+                        marginBottom: "20px"
                     }}
                 >
                     {error}
@@ -352,8 +386,6 @@ function App() {
             {/* KPI CARDS */}
 
             <section className="cards">
-
-                {/* MARKET */}
 
                 <div className="card">
 
@@ -374,22 +406,13 @@ function App() {
                                 : "loss"
                         }
                     >
-                        {change >= 0
-                            ? "+"
-                            : ""}
-                        {number(change)}
-                        {" "}
-                        (
-                        {changePercent >= 0
-                            ? "+"
-                            : ""}
-                        {changePercent}
-                        %)
+                        {change >= 0 ? "+" : ""}
+                        {number(change)} (
+                        {changePercent >= 0 ? "+" : ""}
+                        {changePercent}%)
                     </div>
 
                 </div>
-
-                {/* PORTFOLIO */}
 
                 <div className="card">
 
@@ -407,8 +430,6 @@ function App() {
 
                 </div>
 
-                {/* PNL */}
-
                 <div className="card">
 
                     <div className="card-label">
@@ -422,9 +443,7 @@ function App() {
                                 : "loss"
                         }`}
                     >
-                        {totalPnL >= 0
-                            ? "+"
-                            : ""}
+                        {totalPnL >= 0 ? "+" : ""}
                         {money(totalPnL)}
                     </div>
 
@@ -443,18 +462,16 @@ function App() {
 
                 </div>
 
-                {/* SIGNAL */}
+                {/* LIVE SIGNAL */}
 
                 <div className="card">
 
                     <div className="card-label">
-                        Trading Signal
+                        AI Trading Signal
                     </div>
 
                     <div
-                        className={`signal ${
-                            signal.toLowerCase()
-                        }`}
+                        className={`signal ${signalClass}`}
                     >
                         {signal}
                     </div>
@@ -462,6 +479,146 @@ function App() {
                     <div className="muted">
                         Price: {money(price)}
                     </div>
+
+                    {confidence !== undefined && (
+                        <div className="muted">
+                            Confidence: {confidence}%
+                        </div>
+                    )}
+
+                </div>
+
+            </section>
+
+            {/* SIGNAL ANALYSIS */}
+
+            <section className="position-section">
+
+                <div className="section-title">
+
+                    <h2>
+                        Strategy Analysis
+                    </h2>
+
+                    <span>
+                        EMA + RSI
+                    </span>
+
+                </div>
+
+                <div className="position-grid">
+
+                    <div>
+                        <span>EMA 20</span>
+
+                        <strong>
+                            {ema20
+                                ? money(ema20)
+                                : "--"}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>EMA 50</span>
+
+                        <strong>
+                            {ema50
+                                ? money(ema50)
+                                : "--"}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>RSI 14</span>
+
+                        <strong>
+                            {rsi !== undefined
+                                ? number(rsi)
+                                : "--"}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Analysis</span>
+
+                        <strong>
+                            {reason}
+                        </strong>
+                    </div>
+
+                </div>
+
+            </section>
+
+            {/* MANUAL TRADING */}
+
+            <section className="control-panel">
+
+                <div className="control-info">
+
+                    <h2>
+                        Manual Trading
+                    </h2>
+
+                    <p>
+                        Current NIFTY Price:
+                        <strong>
+                            {" "}
+                            {money(price)}
+                        </strong>
+                    </p>
+
+                    <p>
+                        Quantity:
+                        {" "}
+                        <input
+                            type="number"
+                            min="1"
+                            value={quantity}
+                            onChange={(e) =>
+                                setQuantity(
+                                    Math.max(
+                                        1,
+                                        Number(e.target.value)
+                                    )
+                                )
+                            }
+                            style={{
+                                width: "80px",
+                                marginLeft: "8px",
+                                padding: "7px",
+                                borderRadius: "6px",
+                                border: "1px solid #334155",
+                                background: "#0f172a",
+                                color: "white"
+                            }}
+                        />
+                    </p>
+
+                </div>
+
+                <div className="buttons">
+
+                    <button
+                        className="start-btn"
+                        onClick={buyNifty}
+                        disabled={actionLoading}
+                    >
+                        {actionLoading
+                            ? "PROCESSING..."
+                            : "BUY NIFTY"}
+                    </button>
+
+                    <button
+                        className="stop-btn"
+                        onClick={sellNifty}
+                        disabled={
+                            actionLoading ||
+                            quantityHeld === 0
+                        }
+                    >
+                        SELL NIFTY
+                    </button>
 
                 </div>
 
@@ -484,9 +641,11 @@ function App() {
                 </div>
 
                 <div className="chart">
+
                     <PriceChart
                         data={chartData}
                     />
+
                 </div>
 
             </section>
@@ -567,7 +726,7 @@ function App() {
                     </h2>
 
                     <span>
-                        {quantity > 0
+                        {quantityHeld > 0
                             ? "OPEN"
                             : "NO POSITION"}
                     </span>
@@ -577,9 +736,7 @@ function App() {
                 <div className="position-grid">
 
                     <div>
-                        <span>
-                            Symbol
-                        </span>
+                        <span>Symbol</span>
 
                         <strong>
                             NIFTY
@@ -587,24 +744,18 @@ function App() {
                     </div>
 
                     <div>
-                        <span>
-                            Quantity
-                        </span>
+                        <span>Quantity</span>
 
                         <strong>
-                            {quantity}
+                            {quantityHeld}
                         </strong>
                     </div>
 
                     <div>
-                        <span>
-                            Average Price
-                        </span>
+                        <span>Average Price</span>
 
                         <strong>
-                            {money(
-                                averagePrice
-                            )}
+                            {money(averagePrice)}
                         </strong>
                     </div>
 
@@ -623,9 +774,7 @@ function App() {
                             {unrealizedPnL >= 0
                                 ? "+"
                                 : ""}
-                            {money(
-                                unrealizedPnL
-                            )}
+                            {money(unrealizedPnL)}
                         </strong>
                     </div>
 
@@ -633,7 +782,7 @@ function App() {
 
             </section>
 
-            {/* TRADES */}
+            {/* RECENT TRADES */}
 
             <section className="position-section">
 
@@ -656,25 +805,12 @@ function App() {
                         <thead>
 
                             <tr>
-                                <th>
-                                    Action
-                                </th>
-
-                                <th>
-                                    Symbol
-                                </th>
-
-                                <th>
-                                    Price
-                                </th>
-
-                                <th>
-                                    Quantity
-                                </th>
-
-                                <th>
-                                    Total
-                                </th>
+                                <th>Action</th>
+                                <th>Symbol</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Total</th>
+                                <th>P&L</th>
                             </tr>
 
                         </thead>
@@ -682,69 +818,94 @@ function App() {
                         <tbody>
 
                             {trades.length === 0 ? (
+
                                 <tr>
                                     <td
-                                        colSpan="5"
+                                        colSpan="6"
                                         className="empty"
                                     >
                                         No trades yet
                                     </td>
                                 </tr>
+
                             ) : (
-                                trades.map(
-                                    (
-                                        trade,
-                                        index
-                                    ) => (
-                                        <tr
-                                            key={
-                                                trade.id ||
-                                                index
-                                            }
-                                        >
-                                            <td
-                                                className={
-                                                    trade.action ===
-                                                    "BUY"
-                                                        ? "trade-buy"
-                                                        : "trade-sell"
+
+                                trades
+                                    .slice()
+                                    .reverse()
+                                    .map(
+                                        (
+                                            trade,
+                                            index
+                                        ) => (
+
+                                            <tr
+                                                key={
+                                                    trade.id ||
+                                                    index
                                                 }
                                             >
-                                                {
-                                                    trade.action
-                                                }
-                                            </td>
 
-                                            <td>
-                                                {
-                                                    trade.symbol ||
-                                                    "NIFTY"
-                                                }
-                                            </td>
+                                                <td
+                                                    className={
+                                                        trade.side ===
+                                                        "BUY"
+                                                            ? "trade-buy"
+                                                            : "trade-sell"
+                                                    }
+                                                >
+                                                    {trade.side ||
+                                                        trade.action ||
+                                                        "--"}
+                                                </td>
 
-                                            <td>
-                                                {money(
-                                                    trade.price ||
+                                                <td>
+                                                    {trade.symbol ||
+                                                        "NIFTY"}
+                                                </td>
+
+                                                <td>
+                                                    {money(
+                                                        trade.price
+                                                    )}
+                                                </td>
+
+                                                <td>
+                                                    {trade.quantity ||
+                                                        0}
+                                                </td>
+
+                                                <td>
+                                                    {money(
+                                                        trade.value ??
+                                                        trade.total ??
                                                         0
-                                                )}
-                                            </td>
+                                                    )}
+                                                </td>
 
-                                            <td>
-                                                {
-                                                    trade.quantity ||
-                                                    0
-                                                }
-                                            </td>
+                                                <td
+                                                    className={
+                                                        Number(
+                                                            trade.pnl ||
+                                                                0
+                                                        ) >= 0
+                                                            ? "profit"
+                                                            : "loss"
+                                                    }
+                                                >
+                                                    {trade.pnl !==
+                                                    undefined
+                                                        ? money(
+                                                              trade.pnl
+                                                          )
+                                                        : "--"}
+                                                </td>
 
-                                            <td>
-                                                {money(
-                                                    trade.total ||
-                                                        0
-                                                )}
-                                            </td>
-                                        </tr>
+                                            </tr>
+
+                                        )
                                     )
-                                )
+
                             )}
 
                         </tbody>
@@ -758,8 +919,7 @@ function App() {
             {/* FOOTER */}
 
             <footer>
-                Trading Bot • Paper Trading
-                Environment
+                Trading Bot • Paper Trading Environment
             </footer>
 
         </div>
